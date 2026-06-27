@@ -11275,7 +11275,7 @@ B.AnchorPoint=Vector2.new(0.5,0.5)
 B.Position=UDim2.new(0.5,0,0.5,0)
 B.ImageLabel.ImageTransparency=au.Topbar.ButtonsType=="Default"and 0 or 1
 if au.Topbar.ButtonsType~="Default"then
-B.ImageLabel.ImageColor3=ak.GetTextColorForHSB(x)
+B.ImageLabel.ImageColor3=ak.GetTextColorForHSB(x or Color3.fromHex"#ff3030")
 end
 
 local C=ak.NewRoundFrame(au.Topbar.ButtonsType=="Default"and au.UICorner-(au.UIPadding/2)or 999,"Squircle",{
@@ -11551,28 +11551,6 @@ end
 
 au:CreateTopbarButton("Minimize","minus",function()
     au:Minimize()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end,(au.Topbar.ButtonsType=="Default"and 997 or 998),nil,Color3.fromHex"#F4C948")
 
 function au.OnOpen(r,u)
@@ -12744,5 +12722,635 @@ end
 
 return aE
 end
+
+
+do
+    local HttpService = game:GetService("HttpService")
+    local UserInputService = game:GetService("UserInputService")
+
+    local Providers = {
+        groq = { Endpoint = "https://api.groq.com/openai/v1/chat/completions", Model = "llama-3.3-70b-versatile" },
+        openai = { Endpoint = "https://api.openai.com/v1/chat/completions", Model = "gpt-4o-mini" },
+    }
+
+    local function getRequest()
+        return (syn and syn.request) or (http and http.request) or http_request or request or (fluxus and fluxus.request)
+    end
+
+    local function safe(fn, ...)
+        local ok, res = pcall(fn, ...)
+        if ok then return res end
+        return nil
+    end
+
+    local function toColor3(v, fallback)
+        if typeof(v) == "Color3" then return v end
+        if type(v) == "string" then
+            local ok, c = pcall(Color3.fromHex, v)
+            if ok then return c end
+        end
+        return fallback
+    end
+
+    aa.ExtraThemes = {
+        { Name = "My Theme", Accent = Color3.fromHex("#1a0028"), Background = Color3.fromHex("#0d0015"), Outline = Color3.fromHex("#3a2050"), Text = Color3.fromHex("#FFFFFF"), Placeholder = Color3.fromHex("#7a6a8a"), Button = Color3.fromHex("#2d0046"), Icon = Color3.fromHex("#9a80b0") },
+        { Name = "Sakura", Accent = Color3.fromHex("#ff6fae"), Background = Color3.fromHex("#140d11"), Outline = Color3.fromHex("#3a2630"), Text = Color3.fromHex("#ffe5f1"), Placeholder = Color3.fromHex("#c98bab"), Button = Color3.fromHex("#241820"), Icon = Color3.fromHex("#ff6fae") },
+        { Name = "Neon", Accent = Color3.fromHex("#00ffa3"), Background = Color3.fromHex("#0a0f0d"), Outline = Color3.fromHex("#13352b"), Text = Color3.fromHex("#eafff7"), Placeholder = Color3.fromHex("#5f8c7d"), Button = Color3.fromHex("#11211b"), Icon = Color3.fromHex("#00ffa3") },
+        { Name = "Ocean", Accent = Color3.fromHex("#3aa0ff"), Background = Color3.fromHex("#0a0f1a"), Outline = Color3.fromHex("#1c2c44"), Text = Color3.fromHex("#e6f0ff"), Placeholder = Color3.fromHex("#6b85a8"), Button = Color3.fromHex("#14213a"), Icon = Color3.fromHex("#3aa0ff") },
+        { Name = "Sunset", Accent = Color3.fromHex("#ff8a3c"), Background = Color3.fromHex("#190f0a"), Outline = Color3.fromHex("#3a261a"), Text = Color3.fromHex("#fff0e6"), Placeholder = Color3.fromHex("#b0876b"), Button = Color3.fromHex("#2a1810"), Icon = Color3.fromHex("#ff8a3c") },
+        { Name = "Matcha", Accent = Color3.fromHex("#9bd35a"), Background = Color3.fromHex("#101510"), Outline = Color3.fromHex("#26321c"), Text = Color3.fromHex("#eef7e6"), Placeholder = Color3.fromHex("#8aa06b"), Button = Color3.fromHex("#1a2414"), Icon = Color3.fromHex("#9bd35a") },
+        { Name = "Grape", Accent = Color3.fromHex("#a96bff"), Background = Color3.fromHex("#120d1a"), Outline = Color3.fromHex("#2b1c44"), Text = Color3.fromHex("#f1e6ff"), Placeholder = Color3.fromHex("#8a6bb0"), Button = Color3.fromHex("#1d1430"), Icon = Color3.fromHex("#a96bff") },
+        { Name = "Mono", Accent = Color3.fromHex("#e8e8e8"), Background = Color3.fromHex("#0c0c0c"), Outline = Color3.fromHex("#262626"), Text = Color3.fromHex("#f5f5f5"), Placeholder = Color3.fromHex("#808080"), Button = Color3.fromHex("#1c1c1c"), Icon = Color3.fromHex("#e8e8e8") },
+        { Name = "Crimson", Accent = Color3.fromHex("#ff3b5c"), Background = Color3.fromHex("#160a0d"), Outline = Color3.fromHex("#3a1a22"), Text = Color3.fromHex("#ffe6ea"), Placeholder = Color3.fromHex("#b06b78"), Button = Color3.fromHex("#2a1218"), Icon = Color3.fromHex("#ff3b5c") },
+        { Name = "Aqua", Accent = Color3.fromHex("#1fd6c9"), Background = Color3.fromHex("#08151a"), Outline = Color3.fromHex("#163844"), Text = Color3.fromHex("#e0fbff"), Placeholder = Color3.fromHex("#5d96a0"), Button = Color3.fromHex("#0f2630"), Icon = Color3.fromHex("#1fd6c9") },
+        { Name = "Amethyst", Accent = Color3.fromHex("#c77dff"), Background = Color3.fromHex("#130a1c"), Outline = Color3.fromHex("#2f1a44"), Text = Color3.fromHex("#f3e8ff"), Placeholder = Color3.fromHex("#9a78c0"), Button = Color3.fromHex("#1f1230"), Icon = Color3.fromHex("#c77dff") },
+        { Name = "Ember", Accent = Color3.fromHex("#ff5722"), Background = Color3.fromHex("#180c08"), Outline = Color3.fromHex("#3a2016"), Text = Color3.fromHex("#fff0ea"), Placeholder = Color3.fromHex("#b07d6b"), Button = Color3.fromHex("#2a1610"), Icon = Color3.fromHex("#ff5722") },
+        { Name = "Lime", Accent = Color3.fromHex("#c6ff3a"), Background = Color3.fromHex("#0d1408"), Outline = Color3.fromHex("#283418"), Text = Color3.fromHex("#f3ffe0"), Placeholder = Color3.fromHex("#94a86b"), Button = Color3.fromHex("#19240f"), Icon = Color3.fromHex("#c6ff3a") },
+        { Name = "Rose Gold", Accent = Color3.fromHex("#e8a0a0"), Background = Color3.fromHex("#16100f"), Outline = Color3.fromHex("#3a2826"), Text = Color3.fromHex("#fff0ee"), Placeholder = Color3.fromHex("#bb8c88"), Button = Color3.fromHex("#251a18"), Icon = Color3.fromHex("#e8a0a0") },
+        { Name = "Cobalt", Accent = Color3.fromHex("#3d5afe"), Background = Color3.fromHex("#0a0c1a"), Outline = Color3.fromHex("#1c2344"), Text = Color3.fromHex("#e8ebff"), Placeholder = Color3.fromHex("#6b75a8"), Button = Color3.fromHex("#141838"), Icon = Color3.fromHex("#3d5afe") },
+        { Name = "Mint", Accent = Color3.fromHex("#5ce6a0"), Background = Color3.fromHex("#0a1410"), Outline = Color3.fromHex("#183228"), Text = Color3.fromHex("#e6fff2"), Placeholder = Color3.fromHex("#6ba88a"), Button = Color3.fromHex("#0f241a"), Icon = Color3.fromHex("#5ce6a0") },
+        { Name = "Gold", Accent = Color3.fromHex("#ffc83a"), Background = Color3.fromHex("#15110a"), Outline = Color3.fromHex("#3a2f18"), Text = Color3.fromHex("#fff8e6"), Placeholder = Color3.fromHex("#b09c6b"), Button = Color3.fromHex("#241d0f"), Icon = Color3.fromHex("#ffc83a") },
+        { Name = "Slate", Accent = Color3.fromHex("#7d93b0"), Background = Color3.fromHex("#0c0f12"), Outline = Color3.fromHex("#242b33"), Text = Color3.fromHex("#e6ebf0"), Placeholder = Color3.fromHex("#6b7580"), Button = Color3.fromHex("#161a1f"), Icon = Color3.fromHex("#7d93b0") },
+        { Name = "Bubblegum", Accent = Color3.fromHex("#ff79c6"), Background = Color3.fromHex("#16101a"), Outline = Color3.fromHex("#3a2640"), Text = Color3.fromHex("#ffe6f7"), Placeholder = Color3.fromHex("#b07ba0"), Button = Color3.fromHex("#241830"), Icon = Color3.fromHex("#ff79c6") },
+        { Name = "Carbon", Accent = Color3.fromHex("#4dd0e1"), Background = Color3.fromHex("#0a0a0c"), Outline = Color3.fromHex("#1f1f26"), Text = Color3.fromHex("#eaeaf0"), Placeholder = Color3.fromHex("#777785"), Button = Color3.fromHex("#161618"), Icon = Color3.fromHex("#4dd0e1") },
+        { Name = "Coral", Accent = Color3.fromHex("#ff7a5c"), Background = Color3.fromHex("#170d0b"), Outline = Color3.fromHex("#3a221c"), Text = Color3.fromHex("#fff0ec"), Placeholder = Color3.fromHex("#b0857b"), Button = Color3.fromHex("#261612"), Icon = Color3.fromHex("#ff7a5c") },
+        { Name = "Frost", Accent = Color3.fromHex("#a0d8ff"), Background = Color3.fromHex("#0a0e14"), Outline = Color3.fromHex("#1c2a3a"), Text = Color3.fromHex("#eaf4ff"), Placeholder = Color3.fromHex("#6b85a0"), Button = Color3.fromHex("#121b26"), Icon = Color3.fromHex("#a0d8ff") },
+    }
+
+    function aa:LoadThemes(...)
+        local names = { ... }
+        if #names == 1 and type(names[1]) == "table" then names = names[1] end
+        local index = {}
+        for _, theme in ipairs(aa.ExtraThemes) do index[theme.Name] = theme end
+        local loaded = {}
+        if #names == 0 then
+            for _, theme in ipairs(aa.ExtraThemes) do
+                aa:AddTheme(theme)
+                table.insert(loaded, theme.Name)
+            end
+        else
+            for _, name in ipairs(names) do
+                local theme = index[name]
+                if theme then
+                    aa:AddTheme(theme)
+                    table.insert(loaded, name)
+                end
+            end
+        end
+        return loaded
+    end
+
+    function aa:GetThemeNames()
+        local names = {}
+        for name in pairs(aa:GetThemes()) do table.insert(names, name) end
+        table.sort(names)
+        return names
+    end
+
+    function aa:CreateFolder(Window, opts)
+        opts = opts or {}
+        return Window:Section({
+            Title = opts.Title or "Folder",
+            Icon = opts.Icon,
+            IconThemed = opts.IconThemed,
+            Opened = opts.Opened ~= false,
+        })
+    end
+
+    function aa:CreateSettingsTab(Window, opts)
+        opts = opts or {}
+        local parent = opts.Section or Window
+        local Tab = parent:Tab({ Title = opts.Title or "Settings", Icon = opts.Icon or "settings" })
+
+        if opts.ShowTheme ~= false then
+            Tab:Section({ Title = "Interface" })
+            Tab:Dropdown({
+                Title = "Theme",
+                Desc = "Change the color theme",
+                Values = aa:GetThemeNames(),
+                Value = aa:GetCurrentTheme(),
+                Callback = function(name) aa:SetTheme(name) end,
+            })
+        end
+
+        if opts.ShowAcrylic ~= false then
+            Tab:Toggle({
+                Title = "Acrylic Blur",
+                Desc = "Frosted background blur",
+                Value = false,
+                Callback = function(v) safe(function() aa:ToggleAcrylic(v) end) end,
+            })
+        end
+
+        if opts.ShowUIScale ~= false then
+            local scaleToken = 0
+            Tab:Slider({
+                Title = "UI Scale",
+                Desc = "Resize the whole interface (applies 1s after release)",
+                Step = 0.05,
+                Value = { Min = 0.6, Max = 1.4, Default = 1 },
+                Callback = function(v)
+                    scaleToken = scaleToken + 1
+                    local my = scaleToken
+                    task.delay(1, function()
+                        if my == scaleToken then
+                            safe(function() aa.UIScaleObj.Scale = v end)
+                        end
+                    end)
+                end,
+            })
+        end
+
+        if opts.ShowKeybind ~= false then
+            local current = opts.ToggleKey or Enum.KeyCode.LeftShift
+            local lastToggle = 0
+            Tab:Keybind({
+                Title = "Toggle Key",
+                Desc = "Open / close the window",
+                Value = current.Name,
+                Callback = function()
+                    if os.clock() - lastToggle < 0.15 then return end
+                    lastToggle = os.clock()
+                    Window:Toggle()
+                end,
+            })
+        end
+
+        if opts.ShowConfig ~= false and Window.ConfigManager then
+            local CM = Window.ConfigManager
+            Tab:Section({ Title = "Configuration" })
+
+            local selected = opts.ConfigName or "default"
+            local active = CM:CreateConfig(selected)
+            local listDropdown
+            local autoSave = opts.AutoSave == true
+            local autoInterval = math.max(2, opts.AutoSaveInterval or 5)
+
+            local function listConfigs()
+                local all = safe(function() return CM:AllConfigs() end) or {}
+                if #all == 0 then all = { selected } end
+                return all
+            end
+
+            local function saveNow(notify)
+                active = CM:CreateConfig(selected)
+                active:SetAsCurrent()
+                local ok = safe(function() return active:Save() end)
+                if notify then
+                    aa:Notify({ Title = ok and "Saved" or "Save failed", Content = "Config '" .. selected .. "'", Icon = ok and "check" or "x", Duration = 4 })
+                end
+                safe(function() listDropdown:Refresh(listConfigs()) end)
+                return ok
+            end
+
+            Tab:Input({
+                Title = "Config Name",
+                Desc = "Name used when saving",
+                Value = selected,
+                Placeholder = "default",
+                Callback = function(text) if text and #text > 0 then selected = text end end,
+            })
+
+            listDropdown = Tab:Dropdown({
+                Title = "Saved Configs",
+                Desc = "Pick a config to load",
+                Values = listConfigs(),
+                Value = selected,
+                Callback = function(name) selected = name end,
+            })
+
+            Tab:Button({ Title = "Save Config", Desc = "Write current settings to disk now", Callback = function() saveNow(true) end })
+
+            Tab:Button({
+                Title = "Load Config",
+                Desc = "Apply the selected config",
+                Callback = function()
+                    active = CM:CreateConfig(selected)
+                    active:SetAsCurrent()
+                    local ok = safe(function() return active:Load() end)
+                    aa:Notify({ Title = ok and "Loaded" or "Load failed", Content = "Config '" .. selected .. "'", Icon = ok and "check" or "x", Duration = 4 })
+                end,
+            })
+
+            Tab:Button({
+                Title = "Delete Config",
+                Desc = "Remove the selected config file",
+                Callback = function()
+                    active = CM:CreateConfig(selected)
+                    local ok = safe(function() return active:Delete() end)
+                    aa:Notify({ Title = ok and "Deleted" or "Delete failed", Content = "Config '" .. selected .. "'", Icon = "trash", Duration = 4 })
+                    safe(function() listDropdown:Refresh(listConfigs()) end)
+                end,
+            })
+
+            Tab:Section({ Title = "Saving" })
+
+            Tab:Toggle({
+                Title = "Auto Save",
+                Desc = "Keep this config saved automatically",
+                Value = autoSave,
+                Callback = function(v) autoSave = v if v then saveNow(false) end end,
+            })
+
+            Tab:Slider({
+                Title = "Auto Save Interval",
+                Desc = "Seconds between automatic saves",
+                Step = 1,
+                Value = { Min = 2, Max = 60, Default = autoInterval },
+                Callback = function(v) autoInterval = math.max(2, v) end,
+            })
+
+            Tab:Toggle({
+                Title = "Auto Load on Launch",
+                Desc = "Load this config every time the script runs",
+                Value = false,
+                Callback = function(v)
+                    active = CM:CreateConfig(selected)
+                    safe(function() active:SetAutoLoad(v) end)
+                    safe(function() active:Save() end)
+                end,
+            })
+
+            Tab:Button({ Title = "Refresh List", Callback = function() safe(function() listDropdown:Refresh(listConfigs()) end) end })
+
+            local alive = true
+            if Window.OnDestroy then safe(function() Window:OnDestroy(function() alive = false end) end) end
+            task.spawn(function()
+                while alive do
+                    task.wait(autoInterval)
+                    if alive and autoSave then saveNow(false) end
+                end
+            end)
+        end
+
+        return Tab
+    end
+
+    function aa:AttachAI(Window, opts)
+        opts = opts or {}
+        local provider = Providers[opts.Provider or "groq"] or Providers.groq
+        local endpoint = opts.Endpoint or provider.Endpoint
+        local model = opts.Model or provider.Model
+        local apiKey = opts.ApiKey
+        local maxHistory = opts.MaxHistory or 20
+
+        local AI = {}
+        local aiName = opts.Name or opts.Title or "AI Assistant"
+        AI.Name = aiName
+        AI.System = opts.System or ("You are " .. aiName .. ", a concise in-game assistant inside a Roblox script hub. Keep answers short.")
+        AI.Messages = {}
+
+        local function ask(prompt)
+            if opts.Ask then return opts.Ask(prompt, AI.Messages) end
+            local reqFn = getRequest()
+            if not reqFn then return "No HTTP request function found in this executor." end
+            if not apiKey then return "No Groq ApiKey set. Pass ApiKey in AttachAI." end
+            local body = { model = model, messages = { { role = "system", content = AI.System } } }
+            for _, m in ipairs(AI.Messages) do table.insert(body.messages, { role = m.role, content = m.content }) end
+            local res = safe(reqFn, {
+                Url = endpoint,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json", ["Authorization"] = "Bearer " .. apiKey },
+                Body = HttpService:JSONEncode(body),
+            })
+            local raw = res and (res.Body or res.body)
+            if not raw then return "Request failed (no response)." end
+            local data = safe(function() return HttpService:JSONDecode(raw) end)
+            if data and data.choices and data.choices[1] and data.choices[1].message then return data.choices[1].message.content end
+            if data and data.error and data.error.message then return "API error: " .. tostring(data.error.message) end
+            return "Could not parse the AI response."
+        end
+
+        local accentOverride = opts.Accent
+        local main = Window.UIElements and Window.UIElements.Main
+        local content = Window.UIElements and Window.UIElements.MainBar
+        local host = content or main or aa.ScreenGui
+        local docked = content ~= nil
+
+        local C = {}
+        local function resolveColors()
+            local t = aa:GetThemes()[aa:GetCurrentTheme()] or {}
+            C.panel = toColor3(t.WindowBackground or t.Background, Color3.fromHex("#0d0015"))
+            C.accent = toColor3(accentOverride or t.Accent or t.Icon, Color3.fromHex("#9a80b0"))
+            C.text = toColor3(t.Text, Color3.fromHex("#FFFFFF"))
+            C.placeholder = toColor3(t.Placeholder, Color3.fromHex("#7a6a8a"))
+            C.userBubble = toColor3(t.Button, Color3.fromHex("#2d0046"))
+            C.aiBubble = toColor3(t.Outline or t.ElementBackground, Color3.fromHex("#1a0028"))
+            C.inputBg = toColor3(t.ElementBackground or t.Button, Color3.fromHex("#1a0028"))
+        end
+        resolveColors()
+
+        local panel = Instance.new("Frame")
+        panel.Name = "WindUIPlus_AIChat"
+        panel.BackgroundColor3 = C.panel
+        panel.BackgroundTransparency = 0.02
+        panel.BorderSizePixel = 0
+        panel.ClipsDescendants = true
+        panel.Visible = false
+        panel.ZIndex = 200
+        panel.AnchorPoint = Vector2.new(0, 0)
+        panel.Parent = host
+
+        local pcorner = Instance.new("UICorner")
+        pcorner.CornerRadius = UDim.new(0, 10)
+        pcorner.Parent = panel
+
+        local pstroke = Instance.new("UIStroke")
+        pstroke.Color = C.accent
+        pstroke.Transparency = 0.4
+        pstroke.Thickness = 1
+        pstroke.Parent = panel
+
+        local header = Instance.new("TextLabel")
+        header.BackgroundTransparency = 1
+        header.Size = UDim2.new(1, -44, 0, 34)
+        header.Position = UDim2.new(0, 12, 0, 0)
+        header.Font = Enum.Font.GothamBold
+        header.TextSize = 15
+        header.TextColor3 = C.text
+        header.TextXAlignment = Enum.TextXAlignment.Left
+        header.Text = aiName
+        header.ZIndex = 51
+        header.Parent = panel
+
+        local closeBtn = Instance.new("TextButton")
+        closeBtn.Size = UDim2.new(0, 28, 0, 28)
+        closeBtn.Position = UDim2.new(1, -34, 0, 4)
+        closeBtn.BackgroundColor3 = C.userBubble
+        closeBtn.AutoButtonColor = true
+        closeBtn.Text = ""
+        closeBtn.ZIndex = 51
+        closeBtn.Parent = panel
+
+        local closeIcon = Instance.new("ImageLabel")
+        closeIcon.BackgroundTransparency = 1
+        closeIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+        closeIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+        closeIcon.Size = UDim2.new(0, 16, 0, 16)
+        closeIcon.Image = "rbxassetid://123004300628942"
+        closeIcon.ImageColor3 = C.text
+        closeIcon.ZIndex = 52
+        closeIcon.Parent = closeBtn
+
+        local ccorner = Instance.new("UICorner")
+        ccorner.CornerRadius = UDim.new(0, 6)
+        ccorner.Parent = closeBtn
+
+        local list = Instance.new("ScrollingFrame")
+        list.BackgroundTransparency = 1
+        list.BorderSizePixel = 0
+        list.ScrollBarThickness = 4
+        list.ScrollBarImageColor3 = C.accent
+        list.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        list.CanvasSize = UDim2.new(0, 0, 0, 0)
+        list.ZIndex = 51
+        list.Parent = panel
+
+        local layout = Instance.new("UIListLayout")
+        layout.Padding = UDim.new(0, 6)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Parent = list
+
+        local listPad = Instance.new("UIPadding")
+        listPad.PaddingLeft = UDim.new(0, 4)
+        listPad.PaddingRight = UDim.new(0, 4)
+        listPad.Parent = list
+
+        local inputBar = Instance.new("Frame")
+        inputBar.BackgroundColor3 = C.inputBg
+        inputBar.BorderSizePixel = 0
+        inputBar.AnchorPoint = Vector2.new(0.5, 1)
+        inputBar.ZIndex = 51
+        inputBar.Parent = panel
+        local icorner = Instance.new("UICorner")
+        icorner.CornerRadius = UDim.new(0, 8)
+        icorner.Parent = inputBar
+
+        local box = Instance.new("TextBox")
+        box.BackgroundTransparency = 1
+        box.Size = UDim2.new(1, -74, 1, -12)
+        box.Position = UDim2.new(0, 12, 0, 6)
+        box.Font = Enum.Font.Gotham
+        box.TextSize = 14
+        box.TextColor3 = C.text
+        box.PlaceholderText = "Ask anything..."
+        box.PlaceholderColor3 = C.placeholder
+        box.Text = ""
+        box.ClearTextOnFocus = false
+        box.MultiLine = true
+        box.TextWrapped = true
+        box.TextXAlignment = Enum.TextXAlignment.Left
+        box.TextYAlignment = Enum.TextYAlignment.Top
+        box.ZIndex = 52
+        box.Parent = inputBar
+
+        local sendBtn = Instance.new("TextButton")
+        sendBtn.Size = UDim2.new(0, 52, 0, 30)
+        sendBtn.AnchorPoint = Vector2.new(1, 0.5)
+        sendBtn.Position = UDim2.new(1, -8, 0.5, 0)
+        sendBtn.BackgroundColor3 = C.accent
+        sendBtn.AutoButtonColor = true
+        sendBtn.Text = ">"
+        sendBtn.Font = Enum.Font.GothamBold
+        sendBtn.TextSize = 16
+        sendBtn.TextColor3 = C.panel
+        sendBtn.ZIndex = 52
+        sendBtn.Parent = inputBar
+        local scorner = Instance.new("UICorner")
+        scorner.CornerRadius = UDim.new(0, 6)
+        scorner.Parent = sendBtn
+
+        local function applyTheme()
+            resolveColors()
+            panel.BackgroundColor3 = C.panel
+            pstroke.Color = C.accent
+            header.TextColor3 = C.text
+            closeBtn.BackgroundColor3 = C.userBubble
+            closeIcon.ImageColor3 = C.text
+            list.ScrollBarImageColor3 = C.accent
+            inputBar.BackgroundColor3 = C.inputBg
+            box.TextColor3 = C.text
+            box.PlaceholderColor3 = C.placeholder
+            sendBtn.BackgroundColor3 = C.accent
+            sendBtn.TextColor3 = C.panel
+        end
+
+        local function inputHeight()
+            local lineH = 18
+            local lines = 1
+            if box.TextBounds.Y > 0 then lines = math.clamp(math.ceil(box.TextBounds.Y / lineH), 1, 5) end
+            return math.max(46, 16 + lines * lineH)
+        end
+
+        local function relayout()
+            local ih = inputHeight()
+            inputBar.Size = UDim2.new(1, -16, 0, ih)
+            inputBar.Position = UDim2.new(0.5, 0, 1, -10)
+            list.Position = UDim2.new(0, 8, 0, 40)
+            list.Size = UDim2.new(1, -16, 1, -(40 + ih + 16))
+        end
+
+        local function syncSize(animate)
+            if docked or main then
+                panel.AnchorPoint = Vector2.new(0, 0)
+                panel.Position = UDim2.new(0, 0, 0, 0)
+                if animate then
+                    panel.Size = UDim2.new(0, 0, 1, 0)
+                    local TweenService = game:GetService("TweenService")
+                    TweenService:Create(panel, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                        Size = UDim2.new(1, 0, 1, 0),
+                    }):Play()
+                    task.delay(0.21, relayout)
+                else
+                    panel.Size = UDim2.new(1, 0, 1, 0)
+                end
+            else
+                panel.AnchorPoint = Vector2.new(0.5, 0.5)
+                panel.Size = UDim2.fromOffset(360, 420)
+                panel.Position = UDim2.new(0.5, 0, 0.5, 0)
+            end
+            relayout()
+        end
+
+        local conns = {}
+        table.insert(conns, panel:GetPropertyChangedSignal("AbsoluteSize"):Connect(relayout))
+        table.insert(conns, box:GetPropertyChangedSignal("Text"):Connect(function() task.defer(relayout) end))
+        table.insert(conns, box:GetPropertyChangedSignal("AbsoluteSize"):Connect(relayout))
+
+        local function scrollBottom()
+            task.defer(function() list.CanvasPosition = Vector2.new(0, math.max(0, list.AbsoluteCanvasSize.Y)) end)
+        end
+
+        local function addBubble(role, text)
+            local bubble = Instance.new("TextLabel")
+            bubble.BackgroundColor3 = role == "user" and C.userBubble or C.aiBubble
+            bubble.BorderSizePixel = 0
+            bubble.AutomaticSize = Enum.AutomaticSize.Y
+            bubble.Size = UDim2.new(1, -8, 0, 0)
+            bubble.Font = Enum.Font.Gotham
+            bubble.TextSize = 14
+            bubble.TextColor3 = C.text
+            bubble.TextWrapped = true
+            bubble.TextXAlignment = Enum.TextXAlignment.Left
+            bubble.TextYAlignment = Enum.TextYAlignment.Top
+            bubble.Text = (role == "user" and "You: " or (aiName .. ": ")) .. text
+            bubble.ZIndex = 51
+            bubble.Parent = list
+            local bc = Instance.new("UICorner")
+            bc.CornerRadius = UDim.new(0, 6)
+            bc.Parent = bubble
+            local bp = Instance.new("UIPadding")
+            bp.PaddingTop = UDim.new(0, 6)
+            bp.PaddingBottom = UDim.new(0, 6)
+            bp.PaddingLeft = UDim.new(0, 8)
+            bp.PaddingRight = UDim.new(0, 8)
+            bp.Parent = bubble
+            scrollBottom()
+            return bubble
+        end
+
+        local busy = false
+
+        function AI:Clear()
+            AI.Messages = {}
+            for _, c in ipairs(list:GetChildren()) do
+                if c:IsA("TextLabel") then c:Destroy() end
+            end
+        end
+
+        function AI:SetSystem(text) AI.System = text end
+
+        function AI:SetName(name)
+            if not name or #name == 0 then return end
+            aiName = name
+            AI.Name = name
+            header.Text = name
+        end
+
+        function AI:Ask(text)
+            if busy then return end
+            if not text or #text == 0 then return end
+            busy = true
+            sendBtn.Text = "..."
+            table.insert(AI.Messages, { role = "user", content = text })
+            addBubble("user", text)
+            local pending = addBubble("assistant", "thinking...")
+            task.spawn(function()
+                local ok, reply = pcall(ask, text)
+                if not ok then reply = "Error: " .. tostring(reply) end
+                reply = reply or ""
+                pending.Text = aiName .. ": " .. reply
+                table.insert(AI.Messages, { role = "assistant", content = reply })
+                while #AI.Messages > maxHistory do
+                    table.remove(AI.Messages, 1)
+                    if #AI.Messages > 0 and AI.Messages[1].role == "assistant" then table.remove(AI.Messages, 1) end
+                end
+                busy = false
+                sendBtn.Text = ">"
+                scrollBottom()
+            end)
+        end
+
+        local function submit()
+            if busy then return end
+            local cleaned = (box.Text or ""):gsub("[\r\n]+$", "")
+            if #cleaned:gsub("%s", "") == 0 then return end
+            box.Text = ""
+            AI:Ask(cleaned)
+        end
+
+        table.insert(conns, sendBtn.MouseButton1Click:Connect(submit))
+        table.insert(conns, closeBtn.MouseButton1Click:Connect(function() panel.Visible = false end))
+        table.insert(conns, UserInputService.InputBegan:Connect(function(input)
+            if input.KeyCode == Enum.KeyCode.Return and box:IsFocused() then
+                local shift = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
+                if not shift then
+                    box:ReleaseFocus(false)
+                    task.defer(submit)
+                end
+            end
+        end))
+
+        function AI:Toggle()
+            if panel.Visible then
+                panel.Visible = false
+            else
+                applyTheme()
+                panel.Visible = true
+                syncSize(true)
+            end
+        end
+
+        function AI:Open() applyTheme() panel.Visible = true syncSize(true) end
+        function AI:Hide() panel.Visible = false end
+
+        function AI:Destroy()
+            for _, c in ipairs(conns) do safe(function() c:Disconnect() end) end
+            safe(function() panel:Destroy() end)
+            safe(function() AI.Button:Destroy() end)
+        end
+
+        if not aa.__plusThemeHooks then
+            aa.__plusThemeHooks = {}
+            local origSetTheme = aa.SetTheme
+            function aa.SetTheme(self, ...)
+                local r = origSetTheme(self, ...)
+                for _, fn in ipairs(aa.__plusThemeHooks) do safe(fn) end
+                return r
+            end
+        end
+        table.insert(aa.__plusThemeHooks, function()
+            if panel.Visible then applyTheme() end
+        end)
+
+        local btn = Window:CreateTopbarButton("WindUIPlus_AI", opts.Icon or "sparkles", function() AI:Toggle() end, opts.Order or 990)
+
+        syncSize(false)
+        AI.Panel = panel
+        AI.Button = btn
+        return AI
+    end
+end
+
 
 return aa
