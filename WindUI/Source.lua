@@ -1681,10 +1681,9 @@ local am=al or(not ak and 10 or 99)
 local an
 if af and af~=""then
 an=ac("ImageLabel",{
-Image=ab.Icon(af)[1],
-ImageRectSize=ab.Icon(af)[2].ImageRectSize,
-ImageRectOffset=ab.Icon(af)[2].ImageRectPosition,
-Size=UDim2.new(0,21,0,21),
+Image=(function()local r=ab.Icon(af);return r and r[1]or""end)(),
+ImageRectSize=(function()local r=ab.Icon(af);return r and r[2].ImageRectSize or Vector2.new()end)(),
+ImageRectOffset=(function()local r=ab.Icon(af);return r and r[2].ImageRectPosition or Vector2.new()end)(),Size=UDim2.new(0,21,0,21),
 BackgroundTransparency=1,
 ImageColor3=ah=="White"and Color3.new(0,0,0)or nil,
 ImageTransparency=ah=="White"and.4 or 0,
@@ -1825,10 +1824,9 @@ local am=ak or 10
 local an
 if af and af~=""then
 an=ac("ImageLabel",{
-Image=ab.Icon(af)[1],
-ImageRectSize=ab.Icon(af)[2].ImageRectSize,
-ImageRectOffset=ab.Icon(af)[2].ImageRectPosition,
-Size=UDim2.new(0,21,0,21),
+Image=(function()local r=ab.Icon(af);return r and r[1]or""end)(),
+ImageRectSize=(function()local r=ab.Icon(af);return r and r[2].ImageRectSize or Vector2.new()end)(),
+ImageRectOffset=(function()local r=ab.Icon(af);return r and r[2].ImageRectPosition or Vector2.new()end)(),Size=UDim2.new(0,21,0,21),
 BackgroundTransparency=1,
 ThemeTag={
 ImageColor3="Icon",
@@ -3396,10 +3394,9 @@ local aj=ai or 10
 local ak
 if af and af~=""then
 ak=ac("ImageLabel",{
-Image=ab.Icon(af)[1],
-ImageRectSize=ab.Icon(af)[2].ImageRectSize,
-ImageRectOffset=ab.Icon(af)[2].ImageRectPosition,
-Size=UDim2.new(0,21,0,21),
+Image=(function()local r=ab.Icon(af);return r and r[1]or""end)(),
+ImageRectSize=(function()local r=ab.Icon(af);return r and r[2].ImageRectSize or Vector2.new()end)(),
+ImageRectOffset=(function()local r=ab.Icon(af);return r and r[2].ImageRectPosition or Vector2.new()end)(),Size=UDim2.new(0,21,0,21),
 BackgroundTransparency=1,
 ThemeTag={
 ImageColor3="Icon",
@@ -5516,9 +5513,9 @@ Size=UDim2.new(0,13,0,13),
 BackgroundTransparency=1,
 AnchorPoint=Vector2.new(0.5,0.5),
 Position=UDim2.new(0.5,0,0.5,0),
-Image=ab.Icon(ag)[1],
-ImageRectOffset=ab.Icon(ag)[2].ImageRectPosition,
-ImageRectSize=ab.Icon(ag)[2].ImageRectSize,
+Image=(function()local r=ab.Icon(ag);return r and r[1]or""end)(),
+ImageRectOffset=(function()local r=ab.Icon(ag);return r and r[2].ImageRectPosition or Vector2.new()end)(),
+ImageRectSize=(function()local r=ab.Icon(ag);return r and r[2].ImageRectSize or Vector2.new()end)(),
 ImageTransparency=1,
 ImageColor3=Color3.new(0,0,0),
 })
