@@ -12880,8 +12880,10 @@ do
             local selected = opts.ConfigName or "default"
             local active = CM:CreateConfig(selected)
             local listDropdown
+            local autoLoadToggle
             local autoSave = opts.AutoSave == true
             local autoInterval = math.max(2, opts.AutoSaveInterval or 5)
+            local autoLoad = opts.AutoLoad == true
 
             local function listConfigs()
                 local all = safe(function() return CM:AllConfigs() end) or {}
@@ -12891,6 +12893,7 @@ do
 
             local function saveNow(notify)
                 active = CM:CreateConfig(selected)
+                safe(function() active:SetAutoLoad(autoLoad) end)
                 active:SetAsCurrent()
                 local ok = safe(function() return active:Save() end)
                 if notify then
@@ -12898,6 +12901,32 @@ do
                 end
                 safe(function() listDropdown:Refresh(listConfigs()) end)
                 return ok
+            end
+
+            local function getSavedAutoLoad(name)
+                local path = CM.Path and (CM.Path .. tostring(name) .. ".json")
+                if not path or not isfile or not readfile or not isfile(path) then
+                    return opts.AutoLoad == true
+                end
+
+                local ok, data = pcall(function()
+                    return HttpService:JSONDecode(readfile(path))
+                end)
+
+                if ok and data and data.__autoload ~= nil then
+                    return data.__autoload == true
+                end
+
+                return opts.AutoLoad == true
+            end
+
+            local function syncAutoLoadToggle()
+                autoLoad = getSavedAutoLoad(selected)
+                safe(function()
+                    if autoLoadToggle and autoLoadToggle.Set then
+                        autoLoadToggle:Set(autoLoad, false, true)
+                    end
+                end)
             end
 
             Tab:Input({
@@ -12913,7 +12942,10 @@ do
                 Desc = "Pick a config to load",
                 Values = listConfigs(),
                 Value = selected,
-                Callback = function(name) selected = name end,
+                Callback = function(name)
+                    selected = name
+                    syncAutoLoadToggle()
+                end,
             })
 
             Tab:Button({ Title = "Save Config", Desc = "Write current settings to disk now", Callback = function() saveNow(true) end })
@@ -12923,9 +12955,12 @@ do
                 Desc = "Apply the selected config",
                 Callback = function()
                     active = CM:CreateConfig(selected)
+                    autoLoad = getSavedAutoLoad(selected)
+                    safe(function() active:SetAutoLoad(autoLoad) end)
                     active:SetAsCurrent()
                     local ok = safe(function() return active:Load() end)
                     aa:Notify({ Title = ok and "Loaded" or "Load failed", Content = "Config '" .. selected .. "'", Icon = ok and "check" or "x", Duration = 4 })
+                    syncAutoLoadToggle()
                 end,
             })
 
@@ -12937,6 +12972,7 @@ do
                     local ok = safe(function() return active:Delete() end)
                     aa:Notify({ Title = ok and "Deleted" or "Delete failed", Content = "Config '" .. selected .. "'", Icon = "trash", Duration = 4 })
                     safe(function() listDropdown:Refresh(listConfigs()) end)
+                    syncAutoLoadToggle()
                 end,
             })
 
@@ -12957,18 +12993,21 @@ do
                 Callback = function(v) autoInterval = math.max(2, v) end,
             })
 
-            Tab:Toggle({
+            autoLoadToggle = Tab:Toggle({
                 Title = "Auto Load on Launch",
                 Desc = "Load this config every time the script runs",
-                Value = false,
+                Value = autoLoad,
                 Callback = function(v)
+                    autoLoad = v
                     active = CM:CreateConfig(selected)
                     safe(function() active:SetAutoLoad(v) end)
                     safe(function() active:Save() end)
                 end,
             })
 
-            Tab:Button({ Title = "Refresh List", Callback = function() safe(function() listDropdown:Refresh(listConfigs()) end) end })
+            syncAutoLoadToggle()
+
+            Tab:Button({ Title = "Refresh List", Callback = function() safe(function() listDropdown:Refresh(listConfigs()) end) syncAutoLoadToggle() end })
 
             local alive = true
             if Window.OnDestroy then safe(function() Window:OnDestroy(function() alive = false end) end) end
